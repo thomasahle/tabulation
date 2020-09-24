@@ -1,0 +1,63 @@
+%! TEX root = tabulation.tex
+\documentclass[11pt]{article}
+\usepackage[margin=1.3in]{geometry}
+\usepackage[utf8]{inputenc}
+\usepackage[UKenglish]{babel}
+
+%\usepackage[a4paper,
+%            inner=20mm,
+%            outer=50mm,% = marginparsep + marginparwidth
+%                       %   + 5mm (between marginpar and page border)
+%            top=20mm,
+%            bottom=25mm,
+%            marginparsep=5mm,
+%            marginparwidth=60mm,
+%            showframe% for show your page design, normaly not used
+%            ]{geometry}
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+
+\usepackage{tikz}
+\usetikzlibrary{patterns}
+
+\usepackage{authblk}
+\usepackage{fullpage}
+\usepackage{todonotes}
+\usepackage{hyperref}
+\usepackage{algorithm}
+\usepackage[noend]{algpseudocode}
+\usepackage{nameref}
+\usepackage{cleveref}
+%\usepackage[ruled,vlined,commentsnumbered,titlenotnumbered]{algorithm2e}
+
+\DeclareMathOperator*{\E}{E}
+\DeclareMathOperator*{\Var}{Var}
+
+\newcommand{\floor}[1]{\lfloor {#1} \rfloor}
+\newcommand{\bfloor}[1]{\big\lfloor {#1} \big\rfloor}
+\newcommand{\bbfloor}[1]{\bigg\lfloor {#1} \bigg\rfloor}
+\newcommand{\ceil}[1]{\lceil {#1}\rceil}
+\newcommand{\Prp}[1]{\Pr\left[{#1} \right]}
+\newcommand{\Ep}[1]{{\E}\left[{#1} \right]}
+\newcommand\eps\varepsilon
+\newcommand\Z{\mathbb Z}
+
+\newtheorem {lemma} {Lemma}[section]
+\newtheorem {fact} [lemma] {Fact}
+\newtheorem {property} {Property}
+\newtheorem {definition} {Definition}
+\newtheorem {corollary} [lemma] {Corollary}
+\newtheorem {theorem}[lemma] {Theorem}
+\newtheorem {observation}[lemma] {Observation}
+\newtheorem {question}{Question}[section]
+\newtheorem {exercise}[question]{Exercise}
+
+\newcommand{\unif}{\mathcal{U}}
+
+% Drawing
+\newcommand{\andtt}{ \mathbin{\texttt{\&}} }
+\newcommand{\xor}{\oplus}
+\newcommand{\ls}{ \mathbin{\texttt{<\!<}} }
+\newcommand{\rs}{ \mathbin{\texttt{>\!>}} }
