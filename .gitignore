@@ -1,5 +1,7 @@
 # Prerequisites
 *.d
+.DS_Store
+paper/build
 
 # Object files
 *.o

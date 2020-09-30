@@ -213,6 +213,14 @@ MUM
    Vi har 17^30 = 15. Tilfælde?...
    Den værdi man kan få på mange måder er 992=1111100000. Dvs en del mindre end 128**2.
 
+\subsection{Collissions in XXHash}
+XXHash uses NH, but claims (without proof) collision probability $2^{-64}$ rather than $2^{-32}$.
+This claim is made more likely by the fact that the use NH on very short strings, and mix them often with a polynomial like variable length hash.
+
+See https://github.com/Cyan4973/xxHash/tree/dev/tests/collisions
+
+We show that nevertheless we can create lots of collisions with just $2^{20}$ keys, something you wouldn't expect to happen before $2^{32}$ keys, if the collision probability was really $2^{-64}$.
+
 \subsection{Mixing xor and multiplication}
 
 It is often tempting to substitute xor of addition, since it guarantees we don't have do deal with overflows and carries.
@@ -331,6 +339,14 @@ We note that the hash function
 \]
 \emph{does} work, by the strong universality property of Multiply-shift.
 However, this is less ideal as a vector hash, since we can't pull the $+b_i$ out of the $\oplus$ between the terms.
+
+It is also possible that the function
+\[
+   h(x_1, x_2, x_3, x_4) = (a_1 \oplus x_1)(a_2 \oplus x_2) \oplus (a_3 \oplus x_3)(a_4 \oplus x_4)
+   ,
+\]
+which is more in line with the MUM function is less prone to collisions.
+However experimental tests indicate that it has at least a factor 4 worse collision probability than with plus (NH).
 
 \subsection{Empty Buckets}
 
