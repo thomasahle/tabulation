@@ -25,3 +25,15 @@ printf("%llu", tab_finalize(&h1));
 // Or just hash a value directly
 printf("%llu", tab_hash(&h1, 2314234));
 ```
+
+# Alternative stream api
+That doesn't hide the state inside the hash function
+```
+// Hash some data, streaming fasion
+uint64_t state = 0;
+state = tab_process(&h1, &bytes, len_bytes, state);
+state = tab_process(&h1, &more_bytes, len_more_bytes, state);
+
+// Finalize hash value
+printf("%llu", tab_finalize(&h1, state));
+```
