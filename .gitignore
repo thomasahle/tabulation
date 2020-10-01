@@ -2,6 +2,7 @@
 *.d
 .DS_Store
 paper/build
+*.python-version
 
 # Object files
 *.o

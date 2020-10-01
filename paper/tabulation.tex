@@ -136,6 +136,33 @@ By doing
 \]
 we can process twice as many 32bit words per instruction.
 
+\[
+\begin{tikzpicture}
+   % Horizontal lines
+   \foreach \y in {0, -1.1, -2.2} {
+      \draw (0, \y) -- (13, \y);
+      \draw (0, \y-1) -- (13, \y-1);
+   }
+   % Vertical lines
+   \foreach \y in {0, -1.1}
+      \foreach \x in {0,3,...,12}
+         \draw (\x, \y) -- (\x, \y-1);
+   \foreach \x in {0,6,...,12}
+      \draw (\x, -2.2) -- (\x, -3.2);
+   % x =
+   \node [draw=none] at (-.5, -1.6) {$\times$};
+   \node [draw=none] at (-.5, -2.7) {$=$};
+   % Numbers
+   \foreach \x [evaluate=\x as \z using {int(\x+4)}] in {0,1} {
+      \node [draw=none] at (6*\x+1.5, -.5) {$x_{i+\x}+a_{i+\z}$};
+      \node [draw=none] at (6*\x+1.5, -1.6) {$x_{i+\z}+a_{i+\x}$};
+      \node [draw=none] at (6*\x+3, -2.7) {$(x_{i+\x}+a_{i+\z})(x_{i+\z}+a_{i+\x})$};
+   }
+   \node [draw=none] at (13, -1.6) {$\dots$};
+\end{tikzpicture}
+\]
+With $256$ bits output, we can process 16 bytes per instruction.
+
 \paragraph{Alignment and Prefetching}
 
 As Lemire writes:

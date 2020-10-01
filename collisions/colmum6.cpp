@@ -37,16 +37,17 @@ uint64_t SquaredCollisions (std::vector<uint64_t> & hashes) {
 }
 
 int main() {
+   bool shift = true;
    srand(123);
-   for (int b = 1; b <= 16; b++)
-   for (int i = 0; i < 3; i++) {
+   for (int b = 10; b < 16; b++)
+   for (int i = 0; i < 30; i++) {
       uint32_t a1 = rand64();
       uint32_t a2 = rand64();
       uint32_t a3 = rand64();
       uint32_t a4 = rand64();
       std::vector<uint64_t> keys;
-      for (int rep = 0; rep < 1<<20; rep++) {
-         uint64_t key = rand64() % (1ull<<4*b);
+      for (int rep = 0; rep < 1<<22; rep++) {
+         uint64_t key = rand64() % (1ull<<2*b);
          keys.push_back(key);
       }
       std::sort(keys.begin(), keys.end());
@@ -60,17 +61,21 @@ int main() {
          last = key;
          distinct++;
          uint64_t kkey = key;
-         uint32_t x1 = (kkey % (1<<b)) << (32-b);
-         kkey >>= b;
-         uint32_t x2 = (kkey % (1<<b)) << (32-b);
-         kkey >>= b;
-         uint32_t x3 = (kkey % (1<<b)) << (32-b);
-         kkey >>= b;
-         uint32_t x4 = (kkey % (1<<b)) << (32-b);
-         kkey >>= b;
-         uint64_t val = (uint64_t)a1*x1 + (uint64_t)a2*x2 + (uint64_t)a3*x3 + (uint64_t)a4*x4;
+         uint32_t x1 = (kkey % (1<<b)); kkey >>= b;
+         uint32_t x2 = (kkey % (1<<b)); kkey >>= b;
+         uint32_t x3 = ~x1;
+         //uint32_t x2 = (kkey % (1<<b)); kkey >>= b;
+         uint32_t x4 = ~x2;
+         //uint32_t x4 = (kkey % (1<<b)); kkey >>= b;
+         if (shift) {
+            x1 <<= (32-b);
+            x2 <<= (32-b);
+            x3 <<= (32-b);
+            x4 <<= (32-b);
+         }
+         //uint64_t val = (uint64_t)a1*x1 + (uint64_t)a2*x2 + (uint64_t)a3*x3 + (uint64_t)a4*x4;
          //uint64_t val = (uint64_t)(a1+x1)*(a2+x2) + (uint64_t)(a3+x3)*(a4+x4);
-         //uint64_t val = (uint64_t)(a1^x1)*(a2^x2) + (uint64_t)(a3^x3)*(a4^x4);
+         uint64_t val = (uint64_t)(a1^x1)*(a2^x2) + (uint64_t)(a3^x3)*(a4^x4);
          hashes.push_back(val);
       }
       uint64_t colls = SquaredCollisions(hashes);
