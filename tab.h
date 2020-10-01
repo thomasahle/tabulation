@@ -19,12 +19,13 @@ uint64_t generate(tab_generator* gen, uint64_t x) {
    return res;
 }
 
-struct tab_secret {
+struct tab_hash {
    uint64_t utable[BLOCK_LENGTH];
    uint64_t ftable[8][256];
+   uint64_t state;
 }
 
-void init_tab_secret(tab_secret* sec, tab_generator* gen, uint64_t seed) {
+void init_tab_hash(tab_hash* sec, tab_generator* gen, uint64_t seed) {
    // TODO: Use FFT to generate values more efficiently
    uint64_t x = seed;
    for (int i = 0; i < BLOCK_LENGTH; i++)
@@ -34,6 +35,10 @@ void init_tab_secret(tab_secret* sec, tab_generator* gen, uint64_t seed) {
          sec->ftable[i][j] = generate(gen, x++);
 }
 
-uint64_t hash(*tab_secret, uint64_t x) {
+uint64_t tab_process(*tab_secret, uint64_t x) {
+
+}
+
+uint64_t tab_hash(*tab_secret, uint64_t x) {
 
 }
