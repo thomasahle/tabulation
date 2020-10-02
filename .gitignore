@@ -3,6 +3,7 @@
 .DS_Store
 paper/build
 *.python-version
+*.swp
 
 # Object files
 *.o

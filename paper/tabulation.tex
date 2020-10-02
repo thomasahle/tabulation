@@ -135,7 +135,7 @@ By doing
    \sum_i (a_i+x_i)(a_{i+1}+x_{i+1})
 \]
 we can process twice as many 32bit words per instruction.
-
+Using the \texttt{\_mm256\_mul\_epu32} we can do four times that:
 \[
 \begin{tikzpicture}
    % Horizontal lines
@@ -162,6 +162,7 @@ we can process twice as many 32bit words per instruction.
 \end{tikzpicture}
 \]
 With $256$ bits output, we can process 16 bytes per instruction.
+This was the approach of Farsh, XXhash and others.
 
 \paragraph{Alignment and Prefetching}
 
