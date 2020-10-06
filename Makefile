@@ -1,4 +1,4 @@
-CC=gcc
+CC=clang
 CFLAGS=-I.
 DEPS = tab.h
 OBJ = tab.o test.o

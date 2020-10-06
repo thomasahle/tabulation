@@ -1,6 +1,6 @@
 #include <string.h>
 #include <stdlib.h>
-#include <tab.h>
+#include "tab.h"
 
 
 
@@ -44,28 +44,28 @@ static inline uint64_t TAB_take_n(const uint8_t **data, int n){
    return v;
 }
 
-static __uint128_t TAB_combine127(__uint128_t acc, __uint128_t h, __uint128_t a) {
+static uint128_t TAB_combine127(uint128_t acc, uint128_t h, uint128_t a) {
    // Compute acc * a + h  lazy mod 2^127-1
    uint64_t x[2], y[2];
    memcpy(&x, &a, sizeof(x));
    memcpy(&y, &acc, sizeof(y));
    // I don't actually know if I've flipped the high and low bits here
-   __uint128_t y0x0 = (__uint128_t)y[0]*x[0];
-   __uint128_t y0x1 = (__uint128_t)y[0]*x[1];
-   __uint128_t y1x0 = (__uint128_t)y[1]*x[0];
-   __uint128_t y1x1 = (__uint128_t)y[1]*x[1];
+   uint128_t y0x0 = (uint128_t)y[0]*x[0];
+   uint128_t y0x1 = (uint128_t)y[0]*x[1];
+   uint128_t y1x0 = (uint128_t)y[1]*x[0];
+   uint128_t y1x1 = (uint128_t)y[1]*x[1];
    // Compute (y[0]*2^64 + y[1])(x[0]*2^64 + x[1])
    //       = y[0]x[0]*2^128 + (y[0]x[1] + y[1]x[0])*2^64 + y[1]x[1]
    // Shifted down 127: (Separate shifts to avoid overflow problems.)
    // Note that we actually assume (h >> 127) is 0.
-   __uint128_t hi = (y0x0 << 1) + (y0x1 >> 63) + (y1x0 >> 63) + (y1x1 >> 127) + (h >> 127);
+   uint128_t hi = (y0x0 << 1) + (y0x1 >> 63) + (y1x0 >> 63) + (y1x1 >> 127) + (h >> 127);
    // And the low 127 bits: (Overflows are less of an issue here.)
-   __uint128_t lo = (((y0x1 + y1x0) << 64) + y1x1 + h) % ((__uint128_t)1<<127);
+   uint128_t lo = (((y0x1 + y1x0) << 64) + y1x1 + h) % ((uint128_t)1<<127);
    return hi + lo;
 }
 
 static uint64_t TAB_combine61(uint64_t acc, uint64_t block_hash, uint64_t a) {
-   __uint128_t val = (__uint128_t)a * acc + block_hash;
+   uint128_t val = (uint128_t)a * acc + block_hash;
    return (val % (1ull << 61)) + (val >> 61);
 }
 
@@ -79,23 +79,36 @@ void TAB_init_generator(TAB_generator* gen, uint64_t seed[TAB_SEED_LENGTH]) {
 }
 
 uint64_t TAB_generate(TAB_generator* gen, uint64_t x) {
-   // TODO: Compute mod 2^89-1 or something
-   uint64_t res = 0;
+   __uint128_t res = 0;
    for (int i = 0; i < TAB_SEED_LENGTH; i++) {
-      res = res*x + gen->seed[i];
+      res = TAB_combine127(res, gen->seed[i], x);
    }
+   // TODO: if res == 2^127-1, subtract it
    return res;
 }
 
-__uint128_t rand128(TAB_generator* gen, uint64_t x) {
-   __uint128_t hi = (__uint128_t)TAB_generate(gen, x);
-   __uint128_t lo = (__uint128_t)TAB_generate(gen, x+1);
+uint128_t rand128(TAB_generator* gen, uint64_t x) {
+   uint128_t hi = (uint128_t)TAB_generate(gen, x);
+   uint128_t lo = (uint128_t)TAB_generate(gen, x+1);
    return hi << 64 | lo;
 }
 
 
 void TAB_init_hash(TAB_hash* sec, TAB_generator* gen, uint64_t seed) {
    // TODO: Use FFT to generate values more efficiently
+   uint64_t x = seed;
+   for (int i = 0; i < TAB_BLOCK_LENGTH; i++) {
+      sec->nh_table[i] = TAB_generate(gen, x++);
+      sec->ms_table[i] = rand128(gen, x+=2);
+   }
+   for (int i = 0; i < 8; i++)
+      for (int j = 0; j < 256; j++)
+         sec->tab_table[i][j] = TAB_generate(gen, x++);
+   sec->alpha = TAB_generate(gen, x++);
+   sec->ms_extra = rand128(gen, x+=2);
+}
+
+void TAB_init_hash_64(TAB_hash_64* sec, TAB_generator* gen, uint64_t seed) {
    uint64_t x = seed;
    for (int i = 0; i < TAB_BLOCK_LENGTH; i++) {
       sec->nh_table[i] = TAB_generate(gen, x++);
@@ -220,6 +233,10 @@ uint64_t TAB_process(TAB_hash* hash, const uint8_t* const bytes, size_t len_byte
    return TAB_combine61(state, val, hash->alpha);
 }
 
+uint64_t TAB_process_64(TAB_hash_64* hash, const uint8_t* const bytes, size_t len_bytes, uint64_t state) {
+   return 0;
+}
+
 uint64_t TAB_finalize(TAB_hash* hash, uint64_t state) {
    uint8_t x[8];
    memcpy(&x, &state, sizeof(x));
@@ -227,4 +244,8 @@ uint64_t TAB_finalize(TAB_hash* hash, uint64_t state) {
    for (int i = 0; i < 8; i++)
       res ^= hash->tab_table[i][x[i]];
    return res;
+}
+
+uint64_t TAB_finalize_64(TAB_hash_64* hash, uint64_t state) {
+   return 0;
 }

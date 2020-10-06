@@ -13,11 +13,12 @@ A new portable vector hash
 
 Other hash functions:
 Umash
-Clhash
+Clhash~\cite{lemire2016faster}
 XXhash
-Highway
-Siphash
-City, Farm, Wyhash, Murmur
+Highway~\cite{alakuijala2016fast}
+Siphash~\cite{aumasson2012siphash}
+City~\cite{pike2017cityhash}
+, Farm, Wyhash, Murmur~\cite{appleby2012smhasher}
 
 Mention Mikkel's result about acc-0 not being strong enough to do hashing.
 Bash Siphash a bit.
@@ -379,5 +380,9 @@ However experimental tests indicate that it has at least a factor 4 worse collis
 \subsection{Empty Buckets}
 
 We add a new test to SMHasher
+
+
+\bibliographystyle{apa}
+\bibliography{tabulation}
 
 \end{document}
