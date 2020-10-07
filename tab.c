@@ -1,5 +1,6 @@
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include "tab.h"
 
 
@@ -64,8 +65,8 @@ static uint128_t TAB_combine127(uint128_t acc, uint128_t h, uint128_t a) {
    return hi + lo;
 }
 
-static uint64_t TAB_combine61(uint64_t acc, uint64_t block_hash, uint64_t a) {
-   uint128_t val = (uint128_t)a * acc + block_hash;
+static uint64_t TAB_combine61(uint64_t acc, uint64_t h, uint64_t a) {
+   uint128_t val = (uint128_t)acc * a + h;
    return (val % (1ull << 61)) + (val >> 61);
 }
 
@@ -79,12 +80,16 @@ void TAB_init_generator(TAB_generator* gen, uint64_t seed[TAB_SEED_LENGTH]) {
 }
 
 uint64_t TAB_generate(TAB_generator* gen, uint64_t x) {
-   __uint128_t res = 0;
-   for (int i = 0; i < TAB_SEED_LENGTH; i++) {
-      res = TAB_combine127(res, gen->seed[i], x);
+   // x < 2^126 suffices.
+   const uint128_t P = (((uint128_t)1) << 127) - 1;
+   uint128_t res = gen->seed[0];
+   for (int i = 1; i < TAB_SEED_LENGTH/2; i+=2) {
+      uint128_t a = ((uint128_t)gen->seed[i] << 64 | gen->seed[i+1]) % P;
+      res = TAB_combine127(res, a, x);
    }
-   // TODO: if res == 2^127-1, subtract it
-   return res;
+   if (res >= P)
+      res -= P;
+   return (uint64_t)res;
 }
 
 uint128_t rand128(TAB_generator* gen, uint64_t x) {
@@ -101,10 +106,15 @@ void TAB_init_hash(TAB_hash* sec, TAB_generator* gen, uint64_t seed) {
       sec->nh_table[i] = TAB_generate(gen, x++);
       sec->ms_table[i] = rand128(gen, x+=2);
    }
+
    for (int i = 0; i < 8; i++)
       for (int j = 0; j < 256; j++)
          sec->tab_table[i][j] = TAB_generate(gen, x++);
-   sec->alpha = TAB_generate(gen, x++);
+
+   // This is not completely uniform in [p], but that only changes our
+   // collision rate by a tiny amount.
+   sec->alpha = TAB_generate(gen, x++) % ((1ull << 61)-1);
+
    sec->ms_extra = rand128(gen, x+=2);
 }
 
@@ -117,7 +127,7 @@ void TAB_init_hash_64(TAB_hash_64* sec, TAB_generator* gen, uint64_t seed) {
    for (int i = 0; i < 8; i++)
       for (int j = 0; j < 256; j++)
          sec->tab_table[i][j] = TAB_generate(gen, x++);
-   sec->alpha = TAB_generate(gen, x++);
+   sec->alpha = rand128(gen, x+=2) % ((uint128_t)1 << 127) - 1;
    sec->ms_extra = rand128(gen, x+=2);
 }
 
@@ -172,7 +182,8 @@ static uint64_t TAB_BLOCK_scalar_nh32(const uint64_t* random, const uint8_t* dat
    uint64_t block_hash = 0;
    for (size_t i = 0; i < TAB_BLOCK_LENGTH; i++) {
       // Parallel addition helps auto-vectorization
-      uint64_t x = random[i] + TAB_take_8(&data);
+      uint64_t k = TAB_take_8(&data);
+      uint64_t x = random[i] + k;
       block_hash += (x >> 32)*(uint32_t)x;
    }
    return block_hash;
@@ -184,7 +195,7 @@ static uint64_t TAB_BLOCK_scalar_nh32(const uint64_t* random, const uint8_t* dat
 ////////////////////////////////////////////////////////////////////////////////
 
 
-uint64_t TAB_universal(TAB_hash* hash, const uint8_t* const bytes, size_t len_bytes) {
+uint64_t TAB_universal(TAB_hash* hash, const uint8_t* bytes, size_t len_bytes) {
 
    // Make a non-const version of the pointer, so we can move it along as we go.
    const uint8_t* data = bytes;
